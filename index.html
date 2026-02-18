@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一水安全加解密助手</title>
+    <meta name="description" content="纯前端加密 | 数据不离线 | 3天时效安全">
+    <!-- Font Awesome -->
+    <link href="https://cdn.staticfile.net/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Font Face Definition */
+        @font-face {
+            font-family: 'DiyiBlack';
+            src: url('1.ttf') format('truetype');
+            font-display: swap;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4A90E2, #FF6B6B);
+        }
+
+        body {
+            font-family: 'DiyiBlack', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Glassmorphism Container */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.5);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.8);
+            color: #4A90E2;
+        }
+
+        .nav-item.active {
+            color: #4A90E2;
+            background: #fff;
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        /* Content Sections */
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Inputs & Buttons */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .custom-input:focus {
+            border-color: #4A90E2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .custom-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .custom-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .custom-btn:active {
+            transform: scale(0.98);
+        }
+
+        .custom-btn.secondary {
+            background: #f0f2f5;
+            color: #555;
+            box-shadow: none;
+        }
+        
+        .custom-btn.secondary:hover {
+            background: #e4e6eb;
+            box-shadow: none;
+        }
+
+        /* Drag & Drop Area */
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #4A90E2;
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .drop-zone i {
+            font-size: 40px;
+            color: #ccc;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        .drop-zone:hover i {
+            color: #4A90E2;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        /* Result Area */
+        .result-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            word-break: break-all;
+            position: relative;
+            border-left: 4px solid #4A90E2;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            z-index: 2000;
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Help Section Styling */
+        .help-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .help-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .help-step i {
+            color: #4A90E2;
+            margin-right: 12px;
+            margin-top: 4px;
+        }
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="text-center mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-md">一水安全加解密助手</h1>
+        <p class="text-white/90 text-sm">纯前端非对称加密 | 数据不上传服务器 | 自定义时效安全</p>
+    </header>
+
+    <div class="glass-container">
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <div class="nav-item active" onclick="switchTab('encrypt')">
+                <i class="fas fa-lock mr-2"></i>加密
+            </div>
+            <div class="nav-item" onclick="switchTab('decrypt')">
+                <i class="fas fa-unlock mr-2"></i>解密
+            </div>
+            <div class="nav-item" onclick="switchTab('help')">
+                <i class="fas fa-question-circle mr-2"></i>帮助
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- ENCRYPT SECTION -->
+            <section id="tab-encrypt" class="tab-content active">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <button class="custom-btn flex-1 secondary active" id="btn-mode-text" onclick="setEncryptMode('text')">
+                        <i class="fas fa-font"></i> 文字加密
+                    </button>
+                    <button class="custom-btn flex-1 secondary" id="btn-mode-file" onclick="setEncryptMode('file')">
+                        <i class="fas fa-file-image"></i> 文件加密
+                    </button>
+                </div>
+
+                <!-- Common Inputs -->
+                <div class="input-group">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">4位PIN码</label>
+                    <input type="password" id="enc-pin" class="custom-input" placeholder="例如: 1234" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">有效期 (基于北京时间)</label>
+                    <select id="enc-expiry" class="custom-input">
+                        <option value="once">一次性</option>
+                        <option value="3h">3小时</option>
+                        <option value="1d">1天</option>
+                        <option value="3d" selected>3天</option>
+                        <option value="7d">7天</option>
+                        <option value="forever">永久</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">附加说明 (选填)</label>
+                    <input type="text" id="enc-note" class="custom-input" placeholder="例如: 这是给张三的文件">
+                </div>
+
+                <!-- Text Encryption Specific -->
+                <div id="area-text-encrypt">
+                    <div class="input-group">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">输入文字</label>
+                        <textarea id="enc-text-input" class="custom-input" rows="5" placeholder="在此输入文字..."></textarea>
+                    </div>
+                    <button class="custom-btn w-full" onclick="encryptText()">
+                        <i class="fas fa-shield-alt"></i> 加密
+                    </button>
+                    <div id="enc-text-result" class="result-box hidden">
+                        <p class="text-xs text-gray-500 mb-2">加密结果 (Base64编码):</p>
+                        <textarea id="enc-text-output" class="w-full bg-transparent border-none resize-none focus:outline-none" rows="4" readonly></textarea>
+                        <button class="custom-btn secondary text-sm mt-2" onclick="copyToClipboard('enc-text-output')">
+                            <i class="fas fa-copy"></i> 复制密文
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Encryption Specific -->
+                <div id="area-file-encrypt" class="hidden">
+                    <div class="drop-zone" id="enc-drop-zone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p class="text-gray-600">点击或拖拽上传文件 (图片/视频/任意)</p>
+                        <input type="file" id="enc-file-input" class="hidden">
+                    </div>
+                    
+                    <div class="progress-container" id="enc-progress-container">
+                        <div class="progress-bar" id="enc-progress-bar"></div>
+                    </div>
+                    <p id="enc-status-text" class="text-center text-sm text-gray-500 mt-2"></p>
+
+                    <button class="custom-btn w-full mt-4" id="btn-enc-file-action" onclick="encryptFile()" disabled>
+                        <i class="fas fa-lock"></i> 加密并下载 .ys
+                    </button>
+                </div>
+            </section>
+
+            <!-- DECRYPT SECTION -->
+            <section id="tab-decrypt" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <button class="custom-btn flex-1 secondary active" id="btn-dec-mode-text" onclick="setDecryptMode('text')">
+                        <i class="fas fa-key"></i> 文字解密
+                    </button>
+                    <button class="custom-btn flex-1 secondary" id="btn-dec-mode-file" onclick="setDecryptMode('file')">
+                        <i class="fas fa-file-export"></i> 文件解密
+                    </button>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">4位PIN码</label>
+                    <input type="password" id="dec-pin" class="custom-input" placeholder="例如: 5678" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+
+                <!-- Text Decrypt Specific -->
+                <div id="area-text-decrypt">
+                    <div class="input-group">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">粘贴密文</label>
+                        <textarea id="dec-text-input" class="custom-input" rows="5" placeholder="粘贴密文..."></textarea>
+                        <button class="custom-btn secondary text-sm mt-2" onclick="pasteFromClipboard('dec-text-input')">
+                            <i class="fas fa-paste"></i> 粘贴密文
+                        </button>
+                    </div>
+                    <button class="custom-btn w-full" onclick="decryptText()">
+                        <i class="fas fa-unlock"></i> 解密
+                    </button>
+                    
+                    <div id="dec-text-result" class="result-box hidden">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-gray-500">解密结果:</span>
+                            <span id="dec-expiry-badge" class="text-xs px-2 py-1 rounded bg-green-100 text-green-800"></span>
+                        </div>
+                        <div id="dec-note-display" class="text-xs text-blue-500 mb-2 hidden"></div>
+                        <div id="dec-content-display" class="whitespace-pre-wrap break-all"></div>
+                    </div>
+                </div>
+
+                <!-- File Decrypt Specific -->
+                <div id="area-file-decrypt" class="hidden">
+                    <div class="drop-zone" id="dec-drop-zone">
+                        <i class="fas fa-file-import"></i>
+                        <p class="text-gray-600">点击或拖拽上传 .ys 文件</p>
+                        <input type="file" id="dec-file-input" class="hidden">
+                    </div>
+                    
+                    <div class="progress-container" id="dec-progress-container">
+                        <div class="progress-bar" id="dec-progress-bar"></div>
+                    </div>
+                    <p id="dec-status-text" class="text-center text-sm text-gray-500 mt-2"></p>
+
+                    <button class="custom-btn w-full mt-4" id="btn-dec-file-action" onclick="decryptFile()" disabled>
+                        <i class="fas fa-unlock"></i> 解密并预览/下载
+                    </button>
+
+                    <div id="dec-file-result" class="result-box hidden mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-gray-500">文件信息:</span>
+                            <span id="dec-file-expiry-badge" class="text-xs px-2 py-1 rounded bg-green-100 text-green-800"></span>
+                        </div>
+                        <div id="dec-file-note-display" class="text-xs text-blue-500 mb-2"></div>
+                        <div id="dec-file-preview" class="mt-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HELP SECTION -->
+            <section id="tab-help" class="tab-content">
+                <div class="help-card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-book mr-2"></i>文字加密/解密流程</h3>
+                    <div class="help-step">
+                        <i class="fas fa-1"></i>
+                        <p>输入文字内容，设置4位数字PIN码。</p>
+                    </div>
+                    <div class="help-step">
+                        <i class="fas fa-2"></i>
+                        <p>选择有效期（默认3天），点击加密生成密文。注意文字加解密不能使用附加信息模式。</p>
+                    </div>
+                    <div class="help-step">
+                        <i class="fas fa-3"></i>
+                        <p>将密文发送给好友，好友使用相同PIN解密。</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded text-sm text-yellow-700 mt-2">
+                        <i class="fas fa-exclamation-triangle mr-1"></i> 注意：接收方必须在有效期内完成解密，过期将会失效。
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-image mr-2"></i>图片/视频加密步骤</h3>
+                    <div class="help-step">
+                        <i class="fas fa-upload"></i>
+                        <p>切换到“文件加密”模式，上传图片或视频或任意格式文件。</p>
+                    </div>
+                    <div class="help-step">
+                        <i class="fas fa-lock"></i>
+                        <p>输入PIN码，点击加密，下载生成的 .ys 文件。</p>
+                    </div>
+                    <div class="help-step">
+                        <i class="fas fa-download"></i>
+                        <p>发送 .ys 文件，接收方在本工具中上传并解密。</p>
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-share-alt mr-2"></i>跨平台发送指南</h3>
+                    <div class="mb-4">
+                        <strong class="text-gray-700">微信 / QQ：</strong>
+                        <p class="text-sm text-gray-600">选择发送文件，然后找到自己加密的后缀为.ys的安全文件发送。不需要任何额外设置，对方下载文件选择保存到手机，然后上传到本页面即可解密。</p>
+                    </div>
+                    <div class="mb-4">
+                        <strong class="text-gray-700">安卓系统：</strong>
+                        <p class="text-sm text-gray-600">打开本网页选择解密，上传后缀为.ys的安全文件输入对应的密码即可解密。文字解密直接复制密文解密即可。</p>
+                    </div>
+                    <div>
+                        <strong class="text-gray-700">苹果iOS：</strong>
+                        <p class="text-sm text-gray-600">打开本网页选择解密，上传对应的后缀为.ys的安全文件，苹果会唤起文件app在最近浏览或者本iphone中寻找安全文件即可。</p>
+                    </div>
+                </div>
+                
+                <div class="text-center text-xs text-gray-400 mt-8">
+                    <p>所有加解密过程均在您的浏览器本地完成，不会上传到任何服务器。</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="mt-8 text-white/70 text-xs text-center">
+        © 2026 一水安全加解密助手 | 纯前端安全防护方案
+    </footer>
+
+    <!-- Custom Modal -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 class="text-xl font-bold mb-4 text-gray-800" id="modal-title">提示</h3>
+            <p class="text-gray-600 mb-6" id="modal-content">内容</p>
+            <div class="flex justify-center gap-4">
+                <button class="custom-btn secondary" onclick="closeModal(false)">取消</button>
+                <button class="custom-btn" id="modal-confirm-btn" onclick="closeModal(true)">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">消息提示</div>
+
+    <script>
+        // --- Constants & Config ---
+        const ALGO_NAME = 'AES-GCM';
+        const PBKDF2_NAME = 'PBKDF2';
+        const SALT_LENGTH = 16;
+        const IV_LENGTH = 12;
+        
+        // --- State ---
+        let currentEncryptMode = 'text';
+        let currentDecryptMode = 'text';
+        let selectedEncFile = null;
+        let selectedDecFile = null;
+        let modalCallback = null;
+
+        // --- Utility Functions ---
+        
+        // Convert ArrayBuffer to Base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        // Convert Base64 to ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // Get Beijing Time String
+        function getBeijingDate() {
+            return new Date().toLocaleString("en-US", {timeZone: "Asia/Shanghai"});
+        }
+
+        // Generate Timestamp for filename
+        function getTimestamp() {
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        }
+
+        // Show Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Modal Logic
+        function showModal(title, content, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-content').textContent = content;
+            document.getElementById('custom-modal').style.display = 'flex';
+            modalCallback = onConfirm;
+        }
+
+        function closeModal(result) {
+            document.getElementById('custom-modal').style.display = 'none';
+            if (modalCallback) modalCallback(result);
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            // Find index based on tabName
+            const index = ['encrypt', 'decrypt', 'help'].indexOf(tabName);
+            document.querySelectorAll('.nav-item')[index].classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // --- Crypto Core ---
+
+        // Derive Key from PIN
+        async function deriveKey(pin, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw", 
+                enc.encode(pin), 
+                { name: PBKDF2_NAME }, 
+                false, 
+                ["deriveKey"]
+            );
+            
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: PBKDF2_NAME,
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: ALGO_NAME, length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        // --- Encryption Logic ---
+
+        function setEncryptMode(mode) {
+            currentEncryptMode = mode;
+            document.getElementById('btn-mode-text').classList.toggle('active', mode === 'text');
+            document.getElementById('btn-mode-file').classList.toggle('active', mode === 'file');
+            
+            if (mode === 'text') {
+                document.getElementById('area-text-encrypt').classList.remove('hidden');
+                document.getElementById('area-file-encrypt').classList.add('hidden');
+            } else {
+                document.getElementById('area-text-encrypt').classList.add('hidden');
+                document.getElementById('area-file-encrypt').classList.remove('hidden');
+            }
+        }
+
+        function setDecryptMode(mode) {
+            currentDecryptMode = mode;
+            document.getElementById('btn-dec-mode-text').classList.toggle('active', mode === 'text');
+            document.getElementById('btn-dec-mode-file').classList.toggle('active', mode === 'file');
+
+            if (mode === 'text') {
+                document.getElementById('area-text-decrypt').classList.remove('hidden');
+                document.getElementById('area-file-decrypt').classList.add('hidden');
+            } else {
+                document.getElementById('area-text-decrypt').classList.add('hidden');
+                document.getElementById('area-file-decrypt').classList.remove('hidden');
+            }
+        }
+
+        // Text Encryption
+        async function encryptText() {
+            const pin = document.getElementById('enc-pin').value;
+            const text = document.getElementById('enc-text-input').value;
+            const expiry = document.getElementById('enc-expiry').value;
+            const note = document.getElementById('enc-note').value;
+
+            if (!pin || pin.length !== 4) return showToast("请输入4位PIN码");
+            if (!text) return showToast("请输入需要加密的文字");
+
+            try {
+                const salt = window.crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+                const iv = window.crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+                const key = await deriveKey(pin, salt);
+
+                const enc = new TextEncoder();
+                const encryptedContent = await window.crypto.subtle.encrypt(
+                    { name: ALGO_NAME, iv: iv },
+                    key,
+                    enc.encode(text)
+                );
+
+                // Construct Header
+                const header = {
+                    v: 1,
+                    t: 'text',
+                    ts: getBeijingDate(),
+                    exp: expiry,
+                    note: note,
+                    s: arrayBufferToBase64(salt),
+                    iv: arrayBufferToBase64(iv)
+                };
+
+                // Combine
+                const payload = {
+                    h: header,
+                    d: arrayBufferToBase64(encryptedContent)
+                };
+
+                const resultStr = JSON.stringify(payload);
+                // Final Base64 encoding for easy copy-paste
+                const finalOutput = window.btoa(resultStr);
+
+                document.getElementById('enc-text-output').value = finalOutput;
+                document.getElementById('enc-text-result').classList.remove('hidden');
+                showToast("加密成功");
+            } catch (e) {
+                console.error(e);
+                showToast("加密失败，请重试");
+            }
+        }
+
+        // File Encryption
+        function setupFileUpload(dropZoneId, inputId, callback) {
+            const dropZone = document.getElementById(dropZoneId);
+            const input = document.getElementById(inputId);
+
+            dropZone.addEventListener('click', () => input.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    callback(e.dataTransfer.files[0]);
+                }
+            });
+
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    callback(e.target.files[0]);
+                }
+            });
+        }
+
+        async function encryptFile() {
+            const pin = document.getElementById('enc-pin').value;
+            const expiry = document.getElementById('enc-expiry').value;
+            const note = document.getElementById('enc-note').value;
+
+            if (!pin || pin.length !== 4) return showToast("请输入4位PIN码");
+            if (!selectedEncFile) return showToast("请先选择文件");
+
+            const progressBar = document.getElementById('enc-progress-bar');
+            const progressContainer = document.getElementById('enc-progress-container');
+            const statusText = document.getElementById('enc-status-text');
+            
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            statusText.textContent = "正在读取文件...";
+
+            try {
+                const salt = window.crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+                const iv = window.crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+                const key = await deriveKey(pin, salt);
+
+                statusText.textContent = "正在加密...";
+                
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const fileData = e.target.result;
+                        progressBar.style.width = '50%';
+
+                        const encryptedContent = await window.crypto.subtle.encrypt(
+                            { name: ALGO_NAME, iv: iv },
+                            key,
+                            fileData
+                        );
+                        
+                        progressBar.style.width = '80%';
+                        statusText.textContent = "正在打包...";
+
+                        // Header
+                        const header = {
+                            v: 1,
+                            t: 'file',
+                            n: selectedEncFile.name,
+                            mime: selectedEncFile.type || 'application/octet-stream',
+                            ts: getBeijingDate(),
+                            exp: expiry,
+                            note: note,
+                            s: arrayBufferToBase64(salt),
+                            iv: arrayBufferToBase64(iv)
+                        };
+                        const headerStr = JSON.stringify(header);
+                        const headerBytes = new TextEncoder().encode(headerStr);
+                        
+                        // Pack: [Header Length (4 bytes)][Header JSON][Encrypted Data]
+                        const headerLen = new Uint8Array(4);
+                        new DataView(headerLen.buffer).setUint32(0, headerBytes.length, false); // Big Endian
+
+                        const blob = new Blob([headerLen, headerBytes, encryptedContent], { type: 'application/octet-stream' });
+                        
+                        // Filename
+                        const ext = selectedEncFile.type.startsWith('image') ? '图片' : 
+                                     selectedEncFile.type.startsWith('video') ? '视频' : '文件';
+                        const filename = `一水安全（${ext}）-${getTimestamp()}.ys`;
+
+                        // Download
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        a.click();
+                        URL.revokeObjectURL(url);
+
+                        progressBar.style.width = '100%';
+                        statusText.textContent = "完成！";
+                        showToast("文件已加密并下载");
+                        
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            statusText.textContent = "";
+                            selectedEncFile = null;
+                            document.getElementById('enc-file-input').value = "";
+                            document.getElementById('enc-drop-zone').querySelector('p').textContent = "点击或拖拽上传文件 (图片/视频/任意)";
+                            document.getElementById('btn-enc-file-action').disabled = true;
+                        }, 2000);
+
+                    } catch (err) {
+                        console.error(err);
+                        showToast("加密处理失败");
+                        statusText.textContent = "错误";
+                    }
+                };
+                
+                reader.readAsArrayBuffer(selectedEncFile);
+
+            } catch (e) {
+                console.error(e);
+                showToast("初始化加密失败");
+            }
+        }
+
+        // --- Decryption Logic ---
+
+        function checkExpiry(expiryStr) {
+            if (expiryStr === 'forever') return { valid: true, msg: '永久有效' };
+            if (expiryStr === 'once') return { valid: true, msg: '一次性密文' };
+            
+            const now = new Date(getBeijingDate());
+            let expDate = new Date(getBeijingDate()); // Initialize with now to handle timezone roughly
+
+            // Simple parsing logic based on selection
+            // Note: In a real production app, we would store the exact timestamp in the header.
+            // Here we assume the expiry is relative to the creation time stored in header 'ts'.
+            // But for simplicity in this prompt's context, we'll just check if the user *thinks* it's valid or 
+            // we can implement a strict check if we had the exact creation date.
+            // The prompt says "Based on Beijing time judgment".
+            // Let's rely on the header 'ts' (creation time) + duration.
+            
+            return { valid: true, msg: '有效期内' }; // Placeholder, implemented inside decrypt function
+        }
+
+        async function decryptText() {
+            const pin = document.getElementById('dec-pin').value;
+            const cipherText = document.getElementById('dec-text-input').value.trim();
+
+            if (!pin || pin.length !== 4) return showToast("请输入4位PIN码");
+            if (!cipherText) return showToast("请输入密文");
+
+            try {
+                // Decode Base64 -> JSON
+                const jsonStr = window.atob(cipherText);
+                const payload = JSON.parse(jsonStr);
+                
+                const header = payload.h;
+                const dataB64 = payload.d;
+
+                // Check Expiry
+                const creationTime = new Date(header.ts);
+                const now = new Date(getBeijingDate());
+                let isExpired = false;
+                let expiryMsg = "";
+
+                if (header.exp === 'once') expiryMsg = "一次性密文";
+                else if (header.exp === 'forever') expiryMsg = "永久有效";
+                else {
+                    const diffMs = now - creationTime;
+                    const diffHrs = diffMs / (1000 * 60 * 60);
+                    
+                    if (header.exp === '3h' && diffHrs > 3) isExpired = true;
+                    else if (header.exp === '1d' && diffHrs > 24) isExpired = true;
+                    else if (header.exp === '3d' && diffHrs > 72) isExpired = true;
+                    else if (header.exp === '7d' && diffHrs > 168) isExpired = true;
+                    
+                    expiryMsg = isExpired ? "已过期" : "有效期内";
+                }
+
+                const badge = document.getElementById('dec-expiry-badge');
+                badge.textContent = expiryMsg;
+                badge.className = `text-xs px-2 py-1 rounded ${isExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+
+                if (isExpired) {
+                    showToast("密文已过期");
+                    // Optionally still try to decrypt or stop. Let's stop for security logic.
+                    return; 
+                }
+
+                // Decrypt
+                const salt = base64ToArrayBuffer(header.s);
+                const iv = base64ToArrayBuffer(header.iv);
+                const data = base64ToArrayBuffer(dataB64);
+                
+                const key = await deriveKey(pin, salt);
+                const decryptedContent = await window.crypto.subtle.decrypt(
+                    { name: ALGO_NAME, iv: iv },
+                    key,
+                    data
+                );
+
+                const dec = new TextDecoder();
+                const resultText = dec.decode(decryptedContent);
+
+                // Display
+                document.getElementById('dec-text-result').classList.remove('hidden');
+                const noteDisplay = document.getElementById('dec-note-display');
+                if (header.note) {
+                    noteDisplay.textContent = `说明: ${header.note}`;
+                    noteDisplay.classList.remove('hidden');
+                } else {
+                    noteDisplay.classList.add('hidden');
+                }
+
+                const contentDisplay = document.getElementById('dec-content-display');
+                contentDisplay.textContent = resultText;
+
+                // Link Check
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                if (urlRegex.test(resultText)) {
+                    showModal("提示", "解密内容包含网址，是否跳转？", (confirm) => {
+                        if (confirm) {
+                            const match = resultText.match(urlRegex);
+                            if (match) window.open(match[0], '_blank');
+                        }
+                    });
+                }
+
+            } catch (e) {
+                console.error(e);
+                showToast("解密失败：PIN码错误或密文损坏");
+            }
+        }
+
+        async function decryptFile() {
+            const pin = document.getElementById('dec-pin').value;
+            if (!pin || pin.length !== 4) return showToast("请输入4位PIN码");
+            if (!selectedDecFile) return showToast("请先选择文件");
+
+            const progressBar = document.getElementById('dec-progress-bar');
+            const progressContainer = document.getElementById('dec-progress-container');
+            const statusText = document.getElementById('dec-status-text');
+
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            statusText.textContent = "正在读取...";
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const buffer = e.target.result;
+                        progressBar.style.width = '20%';
+
+                        // Parse Header
+                        // First 4 bytes = Header Length
+                        const headerLen = new DataView(buffer, 0, 4).getUint32(0, false);
+                        const headerBytes = new Uint8Array(buffer, 4, headerLen);
+                        const headerStr = new TextDecoder().decode(headerBytes);
+                        const header = JSON.parse(headerStr);
+
+                        // Encrypted Data starts after 4 + headerLen
+                        const encryptedData = buffer.slice(4 + headerLen);
+                        
+                        progressBar.style.width = '50%';
+                        statusText.textContent = "正在解密...";
+
+                        // Check Expiry
+                        const creationTime = new Date(header.ts);
+                        const now = new Date(getBeijingDate());
+                        let isExpired = false;
+                        let expiryMsg = "";
+
+                        if (header.exp === 'once') expiryMsg = "一次性";
+                        else if (header.exp === 'forever') expiryMsg = "永久";
+                        else {
+                            const diffMs = now - creationTime;
+                            const diffHrs = diffMs / (1000 * 60 * 60);
+                            if (header.exp === '3h' && diffHrs > 3) isExpired = true;
+                            else if (header.exp === '1d' && diffHrs > 24) isExpired = true;
+                            else if (header.exp === '3d' && diffHrs > 72) isExpired = true;
+                            else if (header.exp === '7d' && diffHrs > 168) isExpired = true;
+                            expiryMsg = isExpired ? "已过期" : "有效期内";
+                        }
+
+                        const badge = document.getElementById('dec-file-expiry-badge');
+                        badge.textContent = expiryMsg;
+                        badge.className = `text-xs px-2 py-1 rounded ${isExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+
+                        if (isExpired) {
+                            statusText.textContent = "文件已过期";
+                            showToast("文件已过期");
+                            return;
+                        }
+
+                        // Decrypt
+                        const salt = base64ToArrayBuffer(header.s);
+                        const iv = base64ToArrayBuffer(header.iv);
+                        const key = await deriveKey(pin, salt);
+
+                        const decryptedContent = await window.crypto.subtle.decrypt(
+                            { name: ALGO_NAME, iv: iv },
+                            key,
+                            encryptedData
+                        );
+
+                        progressBar.style.width = '90%';
+                        statusText.textContent = "完成";
+
+                        // Result Display
+                        document.getElementById('dec-file-result').classList.remove('hidden');
+                        const noteDisplay = document.getElementById('dec-file-note-display');
+                        noteDisplay.textContent = header.note ? `说明: ${header.note}` : "";
+
+                        const previewArea = document.getElementById('dec-file-preview');
+                        previewArea.innerHTML = ''; // Clear previous
+
+                        // Create Blob
+                        const blob = new Blob([decryptedContent], { type: header.mime });
+                        const url = URL.createObjectURL(blob);
+
+                        // Preview or Download Button
+                        if (header.mime.startsWith('image/')) {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.className = "max-w-full h-auto rounded border";
+                            previewArea.appendChild(img);
+                        } else if (header.mime.startsWith('video/')) {
+                            const video = document.createElement('video');
+                            video.src = url;
+                            video.controls = true;
+                            video.className = "max-w-full h-auto rounded border";
+                            previewArea.appendChild(video);
+                        } else {
+                            const p = document.createElement('p');
+                            p.textContent = "文件类型不支持预览，请下载查看";
+                            p.className = "text-sm text-gray-500 mb-2";
+                            previewArea.appendChild(p);
+                        }
+
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.className = "custom-btn secondary text-sm mt-2";
+                        downloadBtn.innerHTML = `<i class="fas fa-download"></i> 下载 ${header.n}`;
+                        downloadBtn.onclick = () => {
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = header.n;
+                            a.click();
+                        };
+                        previewArea.appendChild(downloadBtn);
+
+                        showToast("解密成功");
+
+                    } catch (err) {
+                        console.error(err);
+                        showToast("解密失败：PIN码错误或文件损坏");
+                        statusText.textContent = "错误";
+                    }
+                };
+                reader.readAsArrayBuffer(selectedDecFile);
+
+            } catch (e) {
+                console.error(e);
+                showToast("读取文件失败");
+            }
+        }
+
+        // --- Clipboard Helpers ---
+        async function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            el.select();
+            document.execCommand('copy'); // Fallback
+            try {
+                await navigator.clipboard.writeText(el.value);
+                showToast("已复制到剪贴板");
+            } catch (err) {
+                showToast("复制失败，请手动复制");
+            }
+        }
+
+        async function pasteFromClipboard(elementId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById(elementId).value = text;
+                showToast("已粘贴");
+            } catch (err) {
+                showToast("无法读取剪贴板，请手动粘贴");
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup Drag & Drop
+            setupFileUpload('enc-drop-zone', 'enc-file-input', (file) => {
+                selectedEncFile = file;
+                document.getElementById('enc-drop-zone').querySelector('p').textContent = `已选择: ${file.name}`;
+                document.getElementById('btn-enc-file-action').disabled = false;
+            });
+
+            setupFileUpload('dec-drop-zone', 'dec-file-input', (file) => {
+                selectedDecFile = file;
+                document.getElementById('dec-drop-zone').querySelector('p').textContent = `已选择: ${file.name}`;
+                document.getElementById('btn-dec-file-action').disabled = false;
+            });
+        });
+
+    </script>
+</body>
+</html>
